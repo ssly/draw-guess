@@ -4,15 +4,18 @@
   </div>
 </template>
 
-<script>
-// import Hello from './components/Hello'
-import Board from './components/Board'
+<script lang="ts">
+import Vue from 'vue'
+import Component from 'vue-class-component'
+import Board from './components/Board.vue'
 
-export default {
-  name: 'app',
+@Component({
   components: {
     Board
   }
+})
+export default class App extends Vue {
+  name = 'app'
 }
 </script>
 
