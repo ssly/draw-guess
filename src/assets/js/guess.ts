@@ -1,23 +1,62 @@
+interface Canvas {
+    offsetLeft: number
+    offsetTop: number
+    offsetWidth: number
+    offsetHeight: number
+    getContext: Function
+}
+
+interface Context {
+    strokeStyle: string
+    lineWidth: number
+    beginPath: Function
+    moveTo: Function
+    lineTo: Function
+    stroke: Function
+    clearRect: Function
+}
+
+/**
+ * 数据对象
+ */
+interface JsonObject {
+    state: number
+    point: {
+        x: number
+        y: number
+    }
+    strokeStyle: string
+    lineWidth: number
+}
+
 export default class Guess {
-    constructor(canvas, ws) {
+    uuid: number
+    ws: object
+    strokeStyle: string
+    lineWidth: number
+    canvas: Canvas
+    context: Context
+    offset: object
+
+    constructor(canvas: any, ws: object) {
         this.uuid = 0
         this.ws = ws
         this.strokeStyle = ''
-        this.lineWidth = ''
+        this.lineWidth = 1
 
         this.canvas = canvas
-        this.context = canvas.getContext('2d')
+        this.context = this.canvas.getContext('2d')
         this.offset = {
             x: canvas.offsetLeft,
             y: canvas.offsetTop
         }
     }
 
-    init(uuid) {
+    init(uuid: number) {
         this.uuid = uuid
     }
 
-    drawing(data) {
+    drawing(data: JsonObject) {
         console.log(data)
         switch (data.state) {
         case 1:

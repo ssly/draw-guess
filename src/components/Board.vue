@@ -1,9 +1,10 @@
 <template>
     <div>
         <div class="start-container">
-            <button :disabled="!checkCanStart(clientArray)" @click="startGame">开始游戏</button>
+            <button v-if="!user.start" :disabled="!checkCanStart(clientArray)" @click="startGame">开始游戏</button>
             <button @click="clearCanvas">清除画板</button>
             <button @click="readyGame">{{user.ready?'取消准备':'准备'}}</button>
+            <span>{{keyWord}}</span>
         </div>
         <div class="canvas-container">
             <canvas ref="canvas" width="500" height="400"></canvas>
@@ -36,13 +37,17 @@ interface User {
     uuid: string;
     currentPlayer?: string;
     ready?: boolean;
+    start?: boolean;
 }
 
 interface Message {
     messageType: number;
     roomId: number;
     uuid: string;
+    currentPlayer?: string;
     user: User[];
+    start?: boolean;
+    keyWord?: string;
 }
 
 interface Ws {
@@ -60,6 +65,7 @@ export default class Board extends Vue {
     ws: Ws
     clientArray: User[] = []
     user: User = { roomId: 0, uuid: '' }
+    keyWord: string = ''
     player: any
     thicknessArray = thicknessArray
     colorArray = colorArray
@@ -79,18 +85,18 @@ export default class Board extends Vue {
     changeColor(color: string) {
         console.log(color)
         this.strokeStyle = color
-        // this.user.setColor(color)
+        this.player.setColor(color)
     }
 
     changeThickness(thickness: number) {
         console.log(thickness)
         this.thinkness = thickness
-        // this.user.setThickness(thickness)
+        this.player.setThickness(thickness)
     }
 
     readyGame() {
-        const ready = !this.user.ready
         console.log(this.user.uuid)
+        const ready = !this.user.ready
         this.ws.send(JSON.stringify({
             messageType: 1,
             roomId: this.user.roomId,
@@ -159,7 +165,9 @@ export default class Board extends Vue {
 
             switch (message.messageType) {
                 case 0:
-                    this.user.uuid = message.uuid
+                    if (!this.user.uuid) {
+                        this.user.uuid = message.uuid
+                    }
                     this.user.roomId = message.roomId
                     break
                 case 1:
@@ -170,12 +178,22 @@ export default class Board extends Vue {
                     })
                     break
                 case 2: // 游戏开始
+                    this.user.start = message.start
+                    this.user.currentPlayer = message.currentPlayer
                     if (this.user.currentPlayer === this.user.uuid) {
                         this.player = new Draw(this.$refs.canvas, this.ws)
                     } else {
                         this.player = new Guess(this.$refs.canvas, this.ws)
                     }
                     this.player.init(this.user.uuid)
+                    break
+                case 10: // 画画
+                    if (this.user.currentPlayer !== this.user.uuid) {
+                        this.player.drawing(message)
+                    }
+                    break
+                case 98:
+                    this.keyWord = message.keyWord || ''
                     break
                 case 99:
                     break
